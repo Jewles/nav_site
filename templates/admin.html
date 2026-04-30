@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>导航站 - 管理</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #f0f2f5; --card: #ffffff; --border: rgba(0,0,0,0.08);
+    --text: #1a1a2e; --text-secondary: #52526e; --text-dim: #8b8b9e;
+    --accent: #3b82f6; --accent-light: rgba(59,130,246,0.08);
+    --green: #16a34a; --amber: #d97706; --danger: #dc2626; --purple: #7c3aed;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.07);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg); color: var(--text); min-height: 100vh;
+  }
+  /* 壁纸背景层 */
+  .wallpaper-bg {
+    position: fixed; inset: 0; z-index: -2;
+    background-size: cover; background-position: center;
+    background-repeat: no-repeat;
+  }
+  /* 默认渐变（无壁纸时） */
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background: radial-gradient(900px 600px at 15% 15%, rgba(59,130,246,0.06) 0%, transparent 60%);
+    pointer-events: none; z-index: -1;
+  }
+
+  header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(255,255,255,0.8); backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border); padding: 0 2rem;
+  }
+  .header-inner {
+    max-width: 1000px; margin: 0 auto;
+    display: flex; justify-content: space-between; align-items: center;
+    height: 60px;
+  }
+  .header-inner h1 { font-size: 1.1rem; font-weight: 700; color: var(--amber); }
+  .back-btn {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    padding: 0.45rem 1rem; border-radius: 10px;
+    border: 1px solid var(--border); color: var(--text);
+    text-decoration: none; font-size: 0.82rem; font-weight: 600;
+    transition: all 0.2s; background: #fff;
+  }
+  .back-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+
+  .container { position: relative; z-index: 1; max-width: 1000px; margin: 0 auto; padding: 1.5rem; }
+
+  .flash {
+    background: rgba(220,38,38,0.08); border: 1px solid rgba(220,38,38,0.2);
+    color: var(--danger); padding: 0.7rem 1rem; border-radius: 10px;
+    margin-bottom: 1.2rem; font-size: 0.85rem;
+  }
+
+  .section {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 1.3rem;
+    margin-bottom: 1.2rem; box-shadow: var(--shadow-sm);
+    animation: fadeSlideUp 0.4s ease both;
+  }
+  .section:nth-child(2) { animation-delay: 0.08s; }
+  .section:nth-child(3) { animation-delay: 0.16s; }
+  .section:nth-child(4) { animation-delay: 0.24s; }
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .section h2 {
+    font-size: 0.9rem; font-weight: 600; color: var(--text);
+    margin-bottom: 0.8rem;
+  }
+
+  .form-row { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+
+  input, select {
+    background: rgba(0,0,0,0.03); border: 1px solid var(--border);
+    color: var(--text); padding: 0.5rem 0.7rem; border-radius: 9px;
+    font-size: 0.82rem; transition: all 0.2s;
+  }
+  input:focus, select:focus {
+    outline: none; border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-light); background: #fff;
+  }
+  input::placeholder { color: var(--text-dim); }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    padding: 0.5rem 1rem; border-radius: 9px;
+    border: none; font-size: 0.82rem; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-primary {
+    background: var(--accent); color: #fff;
+    box-shadow: 0 2px 6px rgba(59,130,246,0.25);
+  }
+  .btn-primary:hover {
+    background: #2563eb; transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+  }
+
+  .btn-danger {
+    background: rgba(220,38,38,0.08); color: var(--danger);
+    border: 1px solid rgba(220,38,38,0.15); padding: 0.35rem 0.7rem; font-size: 0.72rem;
+  }
+  .btn-danger:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
+
+  .btn-edit {
+    background: rgba(217,119,6,0.08); color: var(--amber);
+    border: 1px solid rgba(217,119,6,0.15); padding: 0.35rem 0.7rem; font-size: 0.72rem;
+  }
+  .btn-edit:hover { background: var(--amber); color: #fff; border-color: var(--amber); }
+
+  /* Modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal-box {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 1.5rem; width: 520px; max-width: 92vw;
+    box-shadow: var(--shadow-md); animation: modalIn 0.2s ease both;
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: translateY(16px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .modal-box h3 {
+    font-size: 0.95rem; font-weight: 700; margin-bottom: 1rem; color: var(--amber);
+  }
+  .modal-box .form-row { gap: 0.6rem; margin-bottom: 0.6rem; }
+  .modal-box .form-row:last-of-type { margin-bottom: 1.2rem; }
+  .modal-actions { display: flex; gap: 0.5rem; justify-content: flex-end; }
+  .btn-cancel {
+    background: rgba(0,0,0,0.04); color: var(--text-secondary);
+    border: 1px solid var(--border); padding: 0.5rem 1rem; border-radius: 9px;
+    font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-cancel:hover { background: rgba(0,0,0,0.08); }
+
+  .cat-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.8rem; }
+  .cat-tag {
+    display: flex; align-items: center; gap: 0.3rem;
+    background: rgba(0,0,0,0.02); border: 1px solid var(--border);
+    padding: 0.35rem 0.7rem; border-radius: 8px; font-size: 0.8rem;
+    transition: all 0.2s;
+  }
+  .cat-tag:hover { border-color: var(--accent); background: var(--accent-light); }
+  .cat-tag .name { color: var(--text); font-weight: 500; }
+  .cat-tag .del {
+    color: var(--text-dim); cursor: pointer; font-size: 0.65rem;
+    transition: color 0.15s; background: none; border: none; padding: 0;
+  }
+  .cat-tag .del:hover { color: var(--danger); }
+
+  table { width: 100%; border-collapse: separate; border-spacing: 0 0.25rem; }
+  th {
+    text-align: left; padding: 0.45rem 0.7rem;
+    color: var(--text-dim); font-size: 0.68rem;
+    text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;
+  }
+  tr.data-row { transition: all 0.2s; }
+  tr.data-row:hover { transform: scale(1.003); }
+  td {
+    padding: 0.6rem 0.7rem; background: rgba(0,0,0,0.01); font-size: 0.82rem;
+  }
+  td:first-child { border-radius: 9px 0 0 9px; }
+  td:last-child { border-radius: 0 9px 9px 0; }
+  tr.data-row:hover td { background: rgba(0,0,0,0.02); }
+  td a { color: var(--accent); text-decoration: none; }
+  td a:hover { text-decoration: underline; }
+  .cat-badge {
+    display: inline-block; padding: 0.15rem 0.5rem; border-radius: 6px;
+    font-size: 0.72rem; font-weight: 500;
+    background: var(--accent-light); color: var(--accent);
+  }
+
+  .empty-hint { color: var(--text-dim); font-size: 0.82rem; padding: 0.4rem 0; }
+
+  @media (max-width: 640px) {
+    .form-row { flex-direction: column; }
+    .form-row input, .form-row select { width: 100%; }
+    table { font-size: 0.72rem; }
+  }
+</style>
+</head>
+<body>
+{%- if wallpaper %}
+<div class="wallpaper-bg" style="background-image: url('/wallpapers/{{ wallpaper }}')"></div>
+{%- endif %}
+<header>
+  <div class="header-inner">
+    <h1>⚙ 导航站管理</h1>
+    <a href="/" class="back-btn">← 回首页</a>
+  </div>
+</header>
+
+<div class="container">
+  {% with msgs = get_flashed_messages() %}
+    {% for m in msgs %}<div class="flash">{{ m }}</div>{% endfor %}
+  {% endwith %}
+
+  <!-- 背景壁纸设置 -->
+  <div class="section">
+    <h2>背景壁纸</h2>
+    {% if wallpaper %}
+    <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap">
+      <img src="/wallpapers/{{ wallpaper }}" alt="当前壁纸" style="width:160px;height:90px;object-fit:cover;border-radius:10px;border:1px solid var(--border)">
+      <div style="flex:1;min-width:200px">
+        <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:0.5rem">当前壁纸已启用，管理页和首页均会应用。</p>
+        <form action="/wallpaper/remove" method="post" style="display:inline">
+          <button type="submit" class="btn btn-danger" onclick="return confirm('移除壁纸？')">🗑️ 移除壁纸</button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+    <form action="/wallpaper/upload" method="post" enctype="multipart/form-data" class="form-row" style="margin-top:{% if wallpaper %}0.8rem{% else %}0{% endif %}">
+      <input type="file" name="file" accept="image/png,image/jpeg,image/webp,image/gif" required>
+      <button type="submit" class="btn btn-primary">上传并应用</button>
+    </form>
+  </div>
+
+  <div class="section">
+    <h2>分类管理</h2>
+    <form action="/cat/add" method="post" class="form-row">
+      <input type="text" name="name" placeholder="新分类名称" required>
+      <button type="submit" class="btn btn-primary">+ 添加</button>
+    </form>
+    {% if cats %}
+    <div class="cat-tags">
+      {% for c in cats %}
+      <div class="cat-tag">
+        <span class="name">{{ c.name }}</span>
+        <form action="/cat/{{ c.id }}/delete" method="post" style="display:inline"
+              onsubmit="return confirm('删除分类会同时删除其下所有链接，确定？')">
+          <button type="submit" class="del">✕</button>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="section">
+    <h2>添加链接</h2>
+    <form action="/link/add" method="post" class="form-row">
+      <select name="cat_id" required>
+        <option value="">选择分类</option>
+        {% for c in cats %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
+      </select>
+      <input type="text" name="name" placeholder="网站名称" required style="width:150px">
+      <input type="text" name="url" placeholder="https://..." required style="flex:1;min-width:180px">
+      <input type="text" name="desc" placeholder="描述（可选）" style="flex:1;min-width:140px">
+      <button type="submit" class="btn btn-primary">+ 添加</button>
+    </form>
+  </div>
+
+  <div class="section">
+    <h2>已有链接</h2>
+    {% if links %}
+    <table>
+      <thead><tr><th>分类</th><th>名称</th><th>URL</th><th>描述</th><th></th></tr></thead>
+      <tbody>
+      {% for l in links %}
+      <tr class="data-row">
+        <td><span class="cat-badge">{{ l.cat_name }}</span></td>
+        <td style="font-weight:600">{{ l.name }}</td>
+        <td><a href="{{ l.url }}" target="_blank">{{ l.url[:50] }}{% if l.url|length > 50 %}…{% endif %}</a></td>
+        <td style="color:var(--text-secondary)">{{ l.desc or '-' }}</td>
+        <td style="white-space:nowrap">
+          <button type="button" class="btn btn-edit" onclick="openEdit({{ l.id }}, '{{ l.cat_id }}', '{{ l.name | replace("'", "\\'") }}', '{{ l.url | replace("'", "\\'") }}', '{{ (l.desc or '') | replace("'", "\\'") }}')">编辑</button>
+          <form action="/link/{{ l.id }}/delete" method="post" style="display:inline"
+                onsubmit="return confirm('确定删除？')">
+            <button type="submit" class="btn btn-danger">删除</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="empty-hint">暂无链接，在上面添加吧 👆</p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- 编辑弹窗 -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal-box">
+    <h3>✏️ 编辑链接</h3>
+    <form id="editForm" method="post">
+      <div class="form-row">
+        <select id="editCatId" name="cat_id" required></select>
+      </div>
+      <div class="form-row">
+        <input type="text" id="editName" name="name" placeholder="网站名称" required style="width:150px">
+        <input type="text" id="editUrl" name="url" placeholder="https://..." required style="flex:1;min-width:180px">
+      </div>
+      <div class="form-row">
+        <input type="text" id="editDesc" name="desc" placeholder="描述（可选）" style="flex:1">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="closeEdit()">取消</button>
+        <button type="submit" class="btn btn-primary">保存</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// 把分类数据传给 JS
+const CATS = {{ cats | tojson }};
+
+function openEdit(id, catId, name, url, desc) {
+  const form = document.getElementById('editForm');
+  form.action = '/link/' + id + '/edit';
+
+  // 填充分类下拉
+  const sel = document.getElementById('editCatId');
+  sel.innerHTML = '<option value="">选择分类</option>' +
+    CATS.map(c => '<option value="' + c.id + '"' + (c.id == catId ? ' selected' : '') + '>' + c.name + '</option>').join('');
+
+  document.getElementById('editName').value = name;
+  document.getElementById('editUrl').value = url;
+  document.getElementById('editDesc').value = desc;
+  document.getElementById('editModal').classList.add('active');
+}
+
+function closeEdit() {
+  document.getElementById('editModal').classList.remove('active');
+}
+
+// 点击遮罩关闭
+document.getElementById('editModal').addEventListener('click', function (e) {
+  if (e.target === this) closeEdit();
+});
+
+// ESC 关闭
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape') closeEdit();
+});
+</script>
+</body>
+</html>
